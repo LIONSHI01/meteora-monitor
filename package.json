@@ -6,6 +6,7 @@
   "scripts": {
     "start": "yarn build && node ./dist/main.js",
     "dev": "yarn build && node ./dist/lp.js",
+    "ac": "yarn build && node ./dist/account.js",
     "market": "yarn build && node ./dist/market.js",
     "build": "yarn clean && tsc",
     "clean": "rimraf ./dist",
