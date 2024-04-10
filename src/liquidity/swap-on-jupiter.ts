@@ -47,7 +47,7 @@ export async function swapOnJupiter({
   const rawTransaction = transaction.serialize();
 
   try {
-    logger.info("Executing transaction");
+    logger.info("Executing Swap Token transaction");
     // Execute the transaction
     const txid = await connection.sendRawTransaction(rawTransaction, {
       skipPreflight: true,
