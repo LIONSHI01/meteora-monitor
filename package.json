@@ -6,6 +6,7 @@
   "scripts": {
     "start": "yarn build && node ./dist/main.js",
     "dev": "yarn build && node ./dist/main.js",
+    "ac": "yarn build && node ./dist/account.js",
     "build": "yarn clean && tsc",
     "clean": "rimraf ./dist",
     "test": "yarn build && node ./dist/test.js"
@@ -14,6 +15,8 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@meteora-ag/dlmm": "^1.0.23",
     "@solana/web3.js": "^1.91.4",
+    "apisauce": "^3.0.1",
+    "bs58": "^5.0.0",
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "dotenv": "^16.4.5",
