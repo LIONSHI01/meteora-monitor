@@ -15,6 +15,10 @@ export const METEORA_API_DOMAIN = retrieveEnvVariable(
   "METEORA_API_DOMAIN",
   logger
 );
+export const METEORA_APP_DOMAIN = retrieveEnvVariable(
+  "METEORA_APP_DOMAIN",
+  logger
+);
 
 // Wallet Related
 export const WALLET_ADDRESS = retrieveEnvVariable("WALLET_ADDRESS", logger);

@@ -6,8 +6,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import DLMM from "@meteora-ag/dlmm";
 import { bot } from "./telegram";
 
-// import { getAccountEarnings } from "./account/account";
-import { delay, logger } from "./utils";
+import { logger } from "./utils";
 import {
   RPC_ENDPOINT,
   RPC_WEBSOCKET_ENDPOINT,
@@ -15,21 +14,27 @@ import {
   POOL_CHECK_TIME_INTERVAL,
   TELEGRAM_CHAT_ROOM_ID,
   COMMITMENT_LEVEL,
+  METEORA_APP_DOMAIN,
 } from "./constants";
 
 let poolList: string[] = [];
 
+// NOTE: launch Telegram bot
+bot.launch();
+
+const poolListPath = resolve("./pool-list.txt");
 const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
   commitment: COMMITMENT_LEVEL,
   disableRetryOnRateLimit: true,
 });
+
 const user = new PublicKey(WALLET_ADDRESS);
 logger.info(`Wallet Address: ${WALLET_ADDRESS}`);
 
 function loadPoolList() {
   const count = poolList.length;
-  const data = fs.readFileSync(resolve("./pool-list.txt"), "utf-8");
+  const data = fs.readFileSync(poolListPath, "utf-8");
   poolList = data
     .split("\n")
     .map((a) => a.trim())
@@ -40,12 +45,60 @@ function loadPoolList() {
   }
 }
 
+function addNewPoolAddress(poolAddress: string) {
+  fs.appendFile(poolListPath, "\n" + poolAddress, (err) => {
+    if (err) {
+      console.error("Error appending to file:", err);
+      return;
+    }
+  });
+}
+
 function runTgBot() {
-  bot.launch();
   logger.info("------------------- 🚀 ---------------------");
   logger.info("Telegram bot started.");
   logger.info("------------------- 🚀 ---------------------");
   bot.telegram.sendMessage(TELEGRAM_CHAT_ROOM_ID, "Meteora Monitor start !");
+
+  bot.command("check", (ctx) => {
+    ctx.reply(`Checking Pools no.: ${poolList.length || 0} `);
+
+    if (poolList.length > 0) {
+      checkPools();
+    }
+  });
+
+  bot.command("add", (ctx) => {
+    const newPoolAddress = ctx.message.text.split(" ")[1];
+
+    if (poolList.includes(newPoolAddress)) {
+      ctx.reply(`Address: ${newPoolAddress} already exist on list.`);
+      return;
+    }
+
+    // Append the new address to the file
+    addNewPoolAddress(newPoolAddress);
+
+    ctx.reply(`added new pool address: ${newPoolAddress}`);
+
+    loadPoolList();
+  });
+
+  // bot.command("remove", (ctx) => {
+  //   const poolToRemove = ctx.message.text.split(" ")[1];
+
+  //   if (poolList.includes(poolToRemove)) {
+  //     ctx.reply(`Address: ${poolToRemove} already exist on list.`);
+  //     return;
+  //   }
+
+  //   // Append the new address to the file
+  //   addNewPoolAddress(newPoolAddress);
+
+  //   ctx.reply(`added new pool address: ${newPoolAddress}`);
+
+  //   loadPoolList();
+  // });
 
   // Enable graceful stop
   process.once("SIGINT", () => bot.stop("SIGINT"));
@@ -60,6 +113,16 @@ async function init() {
 async function checkPools() {
   logger.info(`-------------------🟢------------------- `);
   logger.info("Checking pools...");
+  const allPoolLinks = poolList
+    .map((pool) => `${METEORA_APP_DOMAIN}/${pool}`)
+    .join("\n ------------ \n");
+
+  const msgWithAllPools = `
+  Your Pools:\n
+  ${allPoolLinks}
+  `;
+
+  bot.telegram.sendMessage(TELEGRAM_CHAT_ROOM_ID, msgWithAllPools);
 
   for (const poolAddress of poolList) {
     const Pool = new PublicKey(poolAddress);
@@ -74,19 +137,24 @@ async function checkPools() {
         lowerBinId,
         upperBinId
       );
+
       if (isPositionWithinRange) {
         logger.info("Pool is within range.");
       }
 
       if (!isPositionWithinRange) {
-        const message = `Position is out of range!`;
+        const poolUrl = `${METEORA_APP_DOMAIN}/${poolAddress}`;
+        const message = `
+        Position is out of range!\n
+        Link: ${poolUrl}
+        `;
+
         bot.telegram.sendMessage(TELEGRAM_CHAT_ROOM_ID, message);
       }
     }
-
-    logger.info("Bot sleeping...");
-    await delay(1000);
   }
+
+  logger.info("Bot sleeping...");
 }
 
 async function runListener() {
