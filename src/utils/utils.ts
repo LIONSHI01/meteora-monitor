@@ -11,3 +11,7 @@ export const retrieveEnvVariable = (variableName: string, logger: Logger) => {
   }
   return variable;
 };
+
+export async function delay(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
