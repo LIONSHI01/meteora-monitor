@@ -19,3 +19,15 @@ export const METEORA_API_DOMAIN = retrieveEnvVariable(
 // Wallet Related
 export const WALLET_ADDRESS = retrieveEnvVariable("WALLET_ADDRESS", logger);
 export const PRIVATE_KEY = retrieveEnvVariable("PRIVATE_KEY", logger);
+export const POOL_CHECK_TIME_INTERVAL = Number(
+  retrieveEnvVariable("POOL_CHECK_TIME_INTERVAL", logger)
+);
+
+// Bot
+export const TELEGRAM_BOT_TOKEN = retrieveEnvVariable(
+  "TELEGRAM_BOT_TOKEN",
+  logger
+);
+export const TELEGRAM_CHAT_ROOM_ID = Number(
+  retrieveEnvVariable("TELEGRAM_CHAT_ROOM_ID", logger)
+);
