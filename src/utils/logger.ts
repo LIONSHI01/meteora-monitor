@@ -1,8 +1,8 @@
 import pino from "pino";
 
-// const transport = pino.transport({
-//   target: "pino-pretty",
-// });
+const transport = pino.transport({
+  target: "pino-pretty",
+});
 
 export const logger = pino(
   {
@@ -12,6 +12,6 @@ export const logger = pino(
       error: pino.stdSerializers.err,
     },
     base: undefined,
-  }
-  // transport
+  },
+  transport
 );
