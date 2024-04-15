@@ -1,13 +1,12 @@
-import { METEORA_APP_DOMAIN } from "./constants/constants";
+import { METEORA_APP_DOMAIN } from "../constants/constants";
 import fs from "fs";
 import { resolve } from "path";
 
-import { getAllPairs } from "./api";
-import { logger } from "./utils";
+import { getAllPairs } from "../api";
+import { logger } from "../utils";
 
-import { MIN_24H_FEES, MIN_APR, MIN_24H_VOLUME } from "./constants";
-import { Pair } from "./utils/types";
-import { bot } from "./telegram";
+import { MIN_24H_FEES, MIN_APR, MIN_24H_VOLUME } from "../constants";
+import { Pair } from "../utils/types";
 
 /**
  * Target:
@@ -63,16 +62,18 @@ function filterByApr(pool: Pair) {
 function generatePoolMessage(pool: Pair) {
   const { address, apr, fees_24h, today_fees, liquidity, name } = pool || {};
   const poolUrl = `${METEORA_APP_DOMAIN}/${address}`;
-  const feePerTvl24H = Number(fees_24h) / Number(liquidity);
-  const feePerTvlToday = Number(today_fees) / Number(liquidity);
+  const feePerTvl24H =
+    Math.ceil((Number(fees_24h) / Number(liquidity)) * 100) / 100;
+  const feePerTvlToday =
+    Math.ceil(Number(today_fees) / Number(liquidity)) / 100;
   const outputMsg = `
-  Pair: ${name} \n
-  Apr: ${apr} \n
-  24h fees: ${fees_24h} \n
-  Today fees: ${today_fees} \n
-  TVL: ${liquidity} \n
-  Fee per TVL(Today): ${feePerTvl24H} \n
-  Fee per TVL(24h): ${feePerTvlToday} \n
+  Pair: ${name} 
+  Apr: ${apr.toFixed(2)}% 
+  24h fees: ${fees_24h.toFixed(2)} 
+  Today fees: ${today_fees.toFixed(2)} 
+  TVL: ${Number(liquidity).toFixed(2)} 
+  Fee per TVL(Today): ${feePerTvl24H} 
+  Fee per TVL(24h): ${feePerTvlToday} 
   ${poolUrl}
   `;
 
@@ -83,7 +84,7 @@ async function init() {
   loadTokenList();
 }
 
-async function main() {
+export async function getHighYieldPools() {
   await init();
 
   const allPools = await getAllPairs();
@@ -93,6 +94,5 @@ async function main() {
     .filter(filterByApr);
 
   const finalOutput = matchedPools.map(generatePoolMessage).join("\n\n\n");
+  return finalOutput;
 }
-
-main();

@@ -34,8 +34,6 @@ const main = async () => {
   const dlmmPool = await DLMM.create(connection, PUPS_SOL_POOL);
   const { userPositions, activeBin } =
     await dlmmPool.getPositionsByUserAndLbPair(user.publicKey);
-  console.log("🚀 ~ main ~ positions:", userPositions[0].positionData);
-  console.log("🚀 ~ main ~ binData:", activeBin);
 };
 
 main();

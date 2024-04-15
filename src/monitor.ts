@@ -16,13 +16,17 @@ import {
   COMMITMENT_LEVEL,
   METEORA_APP_DOMAIN,
 } from "./constants";
+import { getHighYieldPools } from "./market/pools";
 
 let poolList: string[] = [];
+let tokenList: string[] = [];
 
 // NOTE: launch Telegram bot
 bot.launch();
 
 const poolListPath = resolve("./pool-list.txt");
+const tokenListPath = resolve("./token-list.txt");
+
 const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
   commitment: COMMITMENT_LEVEL,
@@ -42,6 +46,19 @@ function loadPoolList() {
 
   if (poolList.length != count) {
     logger.info(`Loaded pool list: ${poolList.length}`);
+  }
+}
+
+function loadTokenList() {
+  const count = tokenList.length;
+  const data = fs.readFileSync(tokenListPath, "utf-8");
+  tokenList = data
+    .split("\n")
+    .map((a) => a.trim().toLowerCase())
+    .filter((a) => a);
+
+  if (tokenList.length != count) {
+    logger.info(`Loaded token list: ${tokenList.length}`);
   }
 }
 
@@ -97,6 +114,11 @@ function runTgBot() {
     ctx.reply(msgWithAllPools);
   });
 
+  bot.command("pools", async (ctx) => {
+    const highYieldPools = await getHighYieldPools();
+    ctx.reply(highYieldPools);
+  });
+
   // Enable graceful stop
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -105,12 +127,15 @@ function runTgBot() {
 async function init() {
   runTgBot();
   loadPoolList();
+  loadTokenList();
 
   logger.info(`-------------------🟢------------------- `);
-  logger.info("Checking pools...");
+  logger.info("Initiating Bot...");
 }
 
 async function checkPools() {
+  if (poolList.length === 0) return;
+
   for (const poolAddress of poolList) {
     const Pool = new PublicKey(poolAddress);
     const dlmmPool = await DLMM.create(solanaConnection, Pool);
