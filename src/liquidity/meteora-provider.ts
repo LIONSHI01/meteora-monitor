@@ -5,12 +5,14 @@ import {
   sendAndConfirmTransaction,
   SYSVAR_CLOCK_PUBKEY,
   ParsedAccountData,
+  Transaction,
 } from "@solana/web3.js";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import BN from "bn.js";
 import DLMM, { BinLiquidity, LbPosition, StrategyType } from "@meteora-ag/dlmm";
 import { logger } from "../utils";
 import { PRIVATE_KEY, RPC_ENDPOINT } from "../constants";
+import { Wallet } from "ethers";
 
 const user = Keypair.fromSecretKey(bs58.decode(PRIVATE_KEY));
 
@@ -117,7 +119,7 @@ export class MeteoraDlmm {
     }
   }
 
-  async removePositionLiquidity() {
+  async removePoolPositions() {
     const userPositions = await this.getPositionsState();
 
     // Remove Liquidity
@@ -155,6 +157,41 @@ export class MeteoraDlmm {
       }
     } catch (error) {
       console.log("🚀 ~ error:", JSON.parse(JSON.stringify(error)));
+    }
+  }
+
+  async removeSinglePositionLiquidity(position: LbPosition) {
+    logger.info(`Start to remove Position: ${position.publicKey.toString()}`);
+
+    const { publicKey, positionData } = position || {};
+    const binIdsToRemove = positionData.positionBinData.map((bin) => bin.binId);
+
+    logger.info(`Create Remove Liquidity Tx`);
+    const removeLiquidityTxs = (await this.dlmmPool.removeLiquidity({
+      position: publicKey,
+      user: user.publicKey,
+      binIds: binIdsToRemove,
+      liquiditiesBpsToRemove: new Array(binIdsToRemove.length).fill(
+        new BN(100 * 100)
+      ),
+      shouldClaimAndClose: true, // should claim swap fee and close position together
+    })) as Transaction;
+
+    try {
+      logger.info(`Execute and confirm tx`);
+      const removeBalanceLiquidityTxHash = await sendAndConfirmTransaction(
+        connection,
+        removeLiquidityTxs,
+        [user],
+        { skipPreflight: false, preflightCommitment: "confirmed" }
+      );
+      logger.info(`Tx confirmed: ${removeBalanceLiquidityTxHash}`);
+
+      // Return success signal
+      return true;
+    } catch (error) {
+      console.log("Error on Execute and confirm tx", error);
+      return false;
     }
   }
 
