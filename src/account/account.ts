@@ -1,4 +1,4 @@
-import { apiInstance } from "./api-handler";
+import { apiInstance } from "../api/api-handler";
 
 export const getAccountEarnings = (
   walletAddress: string,
