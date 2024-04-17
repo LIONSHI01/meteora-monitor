@@ -35,3 +35,10 @@ export const TELEGRAM_BOT_TOKEN = retrieveEnvVariable(
 export const TELEGRAM_CHAT_ROOM_ID = Number(
   retrieveEnvVariable("TELEGRAM_CHAT_ROOM_ID", logger)
 );
+
+// Pools Filter
+export const MIN_24H_FEES = Number(retrieveEnvVariable("MIN_24H_FEES", logger));
+export const MIN_24H_VOLUME = Number(
+  retrieveEnvVariable("MIN_24H_VOLUME", logger)
+);
+export const MIN_APR = Number(retrieveEnvVariable("MIN_APR", logger));
