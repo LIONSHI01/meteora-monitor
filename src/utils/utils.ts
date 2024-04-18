@@ -15,3 +15,6 @@ export const retrieveEnvVariable = (variableName: string, logger: Logger) => {
 export async function delay(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export const parseNumber = (number: string | number) =>
+  Number(number).toFixed(2);

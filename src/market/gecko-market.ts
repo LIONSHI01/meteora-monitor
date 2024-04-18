@@ -1,10 +1,8 @@
-import { getPoolMarket } from "./api/geckoterminal";
+import { getPoolMarket } from "../api/geckoterminal";
 
-async function poolMarket() {
-  const res = await getPoolMarket(
-    "8nGw9VHzwTBLcAfxWYnFLWbind4tJPSAXiq8nB89mx9d"
-  );
-  const { attributes } = res || {};
+export async function getPoolMarketStats(poolAddress: string) {
+  const apiResponse = await getPoolMarket(poolAddress);
+  const { attributes } = apiResponse || {};
   const { price_change_percentage, transactions, volume_usd } =
     attributes || {};
   const {
@@ -30,9 +28,3 @@ async function poolMarket() {
     volH24,
   };
 }
-
-async function main() {
-  const result = await poolMarket();
-}
-
-main();
