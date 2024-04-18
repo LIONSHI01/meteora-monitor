@@ -16,7 +16,7 @@ import {
   COMMITMENT_LEVEL,
   METEORA_APP_DOMAIN,
 } from "./constants";
-import { getHighYieldPools } from "./market/pools";
+import { getHighYieldPools, getWatchListPools } from "./market/pools";
 
 let poolList: string[] = [];
 let tokenList: string[] = [];
@@ -117,6 +117,11 @@ function runTgBot() {
   bot.command("pools", async (ctx) => {
     const highYieldPools = await getHighYieldPools();
     ctx.reply(highYieldPools);
+  });
+
+  bot.command("list", async (ctx) => {
+    const watchListPools = await getWatchListPools();
+    ctx.reply(watchListPools);
   });
 
   // Enable graceful stop

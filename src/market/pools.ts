@@ -1,4 +1,9 @@
-import { METEORA_APP_DOMAIN } from "../constants/constants";
+import {
+  METEORA_APP_DOMAIN,
+  WATCHLIST_MIN_24H_FEES,
+  WATCHLIST_MIN_24H_VOLUME,
+  WATCHLIST_MIN_APR,
+} from "../constants/constants";
 import fs from "fs";
 import { resolve } from "path";
 
@@ -10,6 +15,7 @@ import { Pair } from "../utils/types";
 import { getPoolMarket } from "../api/geckoterminal";
 import { getPoolMarketStats } from "./gecko-market";
 import { PairWithMarketData } from "../utils/types/gecko";
+import _ from "lodash";
 
 /**
  * Target:
@@ -49,18 +55,18 @@ function loadTokenList() {
 
 function filterByName(pool: Pair) {
   for (const token of tokenList) {
-    return pool.name.toLowerCase().includes(token) && pool;
+    return pool.name.toLowerCase().includes(token.toLocaleLowerCase()) && pool;
   }
 }
-function filterByVolume(pool: Pair) {
-  return Number(pool.trade_volume_24h) > MIN_24H_VOLUME && pool;
-}
-function filterByTxFee(pool: Pair) {
-  return Number(pool.fees_24h) > MIN_24H_FEES && pool;
-}
-function filterByApr(pool: Pair) {
-  return Number(pool.apr) > MIN_APR && pool;
-}
+const filterByVolume = (targetVol: number) => (pool: Pair) => {
+  return Number(pool.trade_volume_24h) > targetVol && pool;
+};
+const filterByTxFee = (targetFee: number) => (pool: Pair) => {
+  return Number(pool.fees_24h) > targetFee && pool;
+};
+const filterByApr = (targetApr: number) => (pool: Pair) => {
+  return Number(pool.apr) > targetApr && pool;
+};
 
 async function addMarketData(pool: Pair): Promise<PairWithMarketData> {
   const poolMarketStats = await getPoolMarketStats(pool.address);
@@ -98,8 +104,8 @@ function generatePoolMessage(pool: PairWithMarketData) {
   24h fees: ${parseNumber(fees_24h)} 
   Today fees: ${parseNumber(today_fees)} 
   TVL: ${parseNumber(liquidity)} 
-  Fee per TVL(Today): ${parseNumber(fees_24h)} 
-  Fee per TVL(24h): ${parseNumber(today_fees)} 
+  Fee per TVL(Today): ${parseNumber(fees_24h / Number(liquidity))} 
+  Fee per TVL(24h): ${parseNumber(today_fees / Number(liquidity))} 
   Price: 5M ${priceM5}|1H ${priceH1}|6H ${priceH6}|24H ${priceH24}
   Volume: 5M ${parseNumber(volM5)}|1H ${parseNumber(volH1)}|6H ${parseNumber(
     volH6
@@ -119,13 +125,48 @@ export async function getHighYieldPools() {
 
   const allPools = await getAllPairs();
   const matchedPools = allPools
-    .filter(filterByVolume)
-    .filter(filterByTxFee)
-    .filter(filterByApr)
+    .filter(filterByVolume(MIN_24H_VOLUME))
+    .filter(filterByTxFee(MIN_24H_FEES))
+    .filter(filterByApr(MIN_APR))
     .sort(sortByApr);
 
   const matchedPoolsWithMarketData = await Promise.all(
     matchedPools.map(addMarketData)
+  );
+
+  const finalOutput = matchedPoolsWithMarketData
+    .map(generatePoolMessage)
+    .join("\n\n");
+  return finalOutput;
+}
+
+export async function getWatchListPools() {
+  await init();
+
+  let matchedPools = [];
+  const allPools = await getAllPairs();
+  for (const token of tokenList) {
+    for (const pool of allPools) {
+      if (pool.name.toLocaleLowerCase().includes(token)) {
+        matchedPools.push(pool);
+      }
+    }
+  }
+
+  const filteredPools = allPools
+    .filter(filterByVolume(WATCHLIST_MIN_24H_VOLUME))
+    .filter(filterByTxFee(WATCHLIST_MIN_24H_FEES))
+    .filter(filterByApr(WATCHLIST_MIN_APR))
+    .sort(sortByApr);
+
+  const uniqueFilPools = _.uniqBy(filteredPools, "name");
+
+  const matchedPoolsWithMarketData = await Promise.all(
+    uniqueFilPools.map(addMarketData)
+  );
+  console.log(
+    "🚀 ~ getWatchListPools ~ matchedPoolsWithMarketData:",
+    matchedPoolsWithMarketData
   );
 
   const finalOutput = matchedPoolsWithMarketData

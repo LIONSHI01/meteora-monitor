@@ -1,6 +1,9 @@
 jlp
 jup
-ore
 zeus
 pups
-sol
+wbtc
+weth
+rndr
+pyth
+w
