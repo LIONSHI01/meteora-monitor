@@ -59,6 +59,8 @@ function filterByApr(pool: Pair) {
   return Number(pool.apr) > MIN_APR && pool;
 }
 
+const sortByApr = (a: Pair, b: Pair) => b.apr - a.apr;
+
 function generatePoolMessage(pool: Pair) {
   const { address, apr, fees_24h, today_fees, liquidity, name } = pool || {};
   const poolUrl = `${METEORA_APP_DOMAIN}/${address}`;
@@ -91,7 +93,8 @@ export async function getHighYieldPools() {
   const matchedPools = allPools
     .filter(filterByVolume)
     .filter(filterByTxFee)
-    .filter(filterByApr);
+    .filter(filterByApr)
+    .sort(sortByApr);
 
   const finalOutput = matchedPools.map(generatePoolMessage).join("\n\n\n");
   return finalOutput;
