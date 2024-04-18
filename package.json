@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "yarn build && node ./dist/main.js",
-    "dev": "yarn build && node ./dist/main.js",
+    "dev": "yarn build && node ./dist/market.js",
     "watch": "yarn build && node ./dist/monitor.js",
     "build": "yarn clean && tsc",
     "clean": "rimraf ./dist",
