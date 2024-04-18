@@ -4,7 +4,6 @@ import {
   GETCOTERMINAL_API_BASE_URL,
   GETCOTERMINAL_API_VERSION,
 } from "../constants";
-import { Pair } from "../utils/types";
 import { PoolStatsResponse } from "../utils/types/gecko";
 
 export const geckoApiInstance = create({

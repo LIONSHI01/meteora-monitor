@@ -1,15 +1,6 @@
-import DLMM, { calculateSpotDistribution } from "@meteora-ag/dlmm";
+import DLMM from "@meteora-ag/dlmm";
 import bs58 from "bs58";
-import {
-  Keypair,
-  Connection,
-  PublicKey,
-  ComputeBudgetProgram,
-  KeyedAccountInfo,
-  TransactionMessage,
-  VersionedTransaction,
-  sendAndConfirmTransaction,
-} from "@solana/web3.js";
+import { Keypair, Connection, PublicKey } from "@solana/web3.js";
 
 import {
   RPC_ENDPOINT,
