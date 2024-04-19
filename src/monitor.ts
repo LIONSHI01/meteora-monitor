@@ -116,16 +116,19 @@ function runTgBot() {
 
   bot.command("pools", async (ctx) => {
     const highYieldPools = await getHighYieldPools();
-    highYieldPools.forEach((poolMsg) => {
+    highYieldPools.forEach(async (poolMsg) => {
       ctx.reply(poolMsg);
+
+      await delay(500);
     });
   });
 
   bot.command("list", async (ctx) => {
     const watchListPools = await getWatchListPools();
 
-    watchListPools.forEach((poolMsg) => {
+    watchListPools.forEach(async (poolMsg) => {
       ctx.reply(poolMsg);
+      await delay(500);
     });
   });
 
