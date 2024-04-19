@@ -134,9 +134,8 @@ export async function getHighYieldPools() {
     matchedPools.map(addMarketData)
   );
 
-  const finalOutput = matchedPoolsWithMarketData
-    .map(generatePoolMessage)
-    .join("\n\n");
+  const finalOutput = matchedPoolsWithMarketData.map(generatePoolMessage);
+
   return finalOutput;
 }
 
@@ -164,13 +163,8 @@ export async function getWatchListPools() {
   const matchedPoolsWithMarketData = await Promise.all(
     uniqueFilPools.map(addMarketData)
   );
-  console.log(
-    "🚀 ~ getWatchListPools ~ matchedPoolsWithMarketData:",
-    matchedPoolsWithMarketData
-  );
 
-  const finalOutput = matchedPoolsWithMarketData
-    .map(generatePoolMessage)
-    .join("\n\n");
+  const finalOutput = matchedPoolsWithMarketData.map(generatePoolMessage);
+
   return finalOutput;
 }

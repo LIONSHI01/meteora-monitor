@@ -6,7 +6,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import DLMM from "@meteora-ag/dlmm";
 import { bot } from "./telegram";
 
-import { logger } from "./utils";
+import { delay, logger } from "./utils";
 import {
   RPC_ENDPOINT,
   RPC_WEBSOCKET_ENDPOINT,
@@ -116,12 +116,17 @@ function runTgBot() {
 
   bot.command("pools", async (ctx) => {
     const highYieldPools = await getHighYieldPools();
-    ctx.reply(highYieldPools);
+    highYieldPools.forEach((poolMsg) => {
+      ctx.reply(poolMsg);
+    });
   });
 
   bot.command("list", async (ctx) => {
     const watchListPools = await getWatchListPools();
-    ctx.reply(watchListPools);
+
+    watchListPools.forEach((poolMsg) => {
+      ctx.reply(poolMsg);
+    });
   });
 
   // Enable graceful stop
