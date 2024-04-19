@@ -17,7 +17,12 @@ export const getPoolMarket = async (poolAddress: string) => {
   try {
     const res: ApiResponse<PoolStatsResponse, PoolStatsResponse> =
       await geckoApiInstance.get(`/networks/solana/pools/${poolAddress}`);
-    return res.data.data;
+
+    if (res?.data?.data) {
+      return res.data.data;
+    } else {
+      throw Error("Failed to fetch Pool Data from Geckoterminal API.");
+    }
   } catch (error) {
     console.log("🚀 ~ getAllPairs ~ error:", error);
   }

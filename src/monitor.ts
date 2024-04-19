@@ -115,21 +115,25 @@ function runTgBot() {
   });
 
   bot.command("pools", async (ctx) => {
+    logger.info("Asking for High Yield pools");
     const highYieldPools = await getHighYieldPools();
-    highYieldPools.forEach(async (poolMsg) => {
-      ctx.reply(poolMsg);
-
-      await delay(500);
-    });
+    for (const pool of highYieldPools) {
+      ctx.reply(pool);
+      await delay(1000);
+    }
   });
 
   bot.command("list", async (ctx) => {
+    logger.info("Asking for Watch List pools");
     const watchListPools = await getWatchListPools();
-
-    watchListPools.forEach(async (poolMsg) => {
-      ctx.reply(poolMsg);
-      await delay(500);
-    });
+    for (const pool of watchListPools) {
+      ctx.reply(pool);
+      await delay(1000);
+    }
+    // watchListPools.forEach(async (poolMsg) => {
+    //   ctx.reply(poolMsg);
+    //   await delay(1000);
+    // });
   });
 
   // Enable graceful stop
