@@ -30,7 +30,6 @@ let wallet: Keypair;
 wallet = Keypair.fromSecretKey(bs58.decode(PRIVATE_KEY));
 
 const solanaConnection = new Connection(RPC_ENDPOINT, "finalized");
-logger.info("connect to solana", solanaConnection);
 
 const USDC_USDT_POOL = new PublicKey(
   "BmdTFuWX5QqsFdYe8554TV45TJbGGmcThDK6ArLFHemt"

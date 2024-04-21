@@ -2207,6 +2207,13 @@ telegraf@^4.16.3:
     safe-compare "^1.1.4"
     sandwich-stream "^2.0.2"
 
+telegram-keyboard@^2.3.5:
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/telegram-keyboard/-/telegram-keyboard-2.3.5.tgz#446870b92323f2fbd862f9465b6bcb5b9721507e"
+  integrity sha512-H8hEzUzuqXK9C35+u4JQWFGpFZuSFKQrwioE2iO7lRNx/qMLy/skemMCuogBBriRMOLUVPQFcyaqZiM1e9juHw==
+  dependencies:
+    typegram "^5.2.0"
+
 text-encoding-utf-8@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/text-encoding-utf-8/-/text-encoding-utf-8-1.0.2.tgz#585b62197b0ae437e3c7b5d0af27ac1021e10d13"
@@ -2281,6 +2288,11 @@ type-fest@^0.20.2:
   version "0.20.2"
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.20.2.tgz#1bf207f4b28f91583666cb5fbd327887301cd5f4"
   integrity sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==
+
+typegram@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/typegram/-/typegram-5.2.0.tgz#becf45510e54e719857a19de573d236435dc28dc"
+  integrity sha512-QubWrgT+tVPpM3/KkT/Rdd2zTYUwx96hePKBSio8pAWUD847M6W6akZppFs5BKfLtzuHBeTgjps528LJ+H1k+w==
 
 typescript@^5.3.3:
   version "5.3.3"

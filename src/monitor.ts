@@ -1,11 +1,11 @@
 import fs from "fs";
 import { resolve } from "path";
 import _ from "lodash";
-
+import { Markup, Telegraf } from "telegraf";
 import { Connection, PublicKey } from "@solana/web3.js";
 import DLMM from "@meteora-ag/dlmm";
-import { bot } from "./telegram";
 
+import { bot } from "./telegram";
 import { delay, logger } from "./utils";
 import {
   RPC_ENDPOINT,
@@ -72,6 +72,7 @@ function addNewPoolAddress(poolAddress: string) {
 }
 
 function runTgBot() {
+  bot.use(Telegraf.log());
   logger.info("------------------- 🚀 ---------------------");
   logger.info("Telegram bot started.");
   logger.info("------------------- 🚀 ---------------------");
@@ -117,8 +118,8 @@ function runTgBot() {
   bot.command("pools", async (ctx) => {
     logger.info("Asking for High Yield pools");
     const highYieldPools = await getHighYieldPools();
-    for (const pool of highYieldPools) {
-      ctx.reply(pool);
+    for (const poolMsg of highYieldPools) {
+      ctx.reply(poolMsg);
       await delay(1000);
     }
   });
@@ -126,10 +127,47 @@ function runTgBot() {
   bot.command("list", async (ctx) => {
     logger.info("Asking for Watch List pools");
     const watchListPools = await getWatchListPools();
-    for (const pool of watchListPools) {
-      ctx.reply(pool);
+    for (const poolMsg of watchListPools) {
+      ctx.reply(poolMsg);
       await delay(1000);
     }
+  });
+
+  // Keyboard
+
+  bot.command("a", async (ctx) => {
+    const keyboard = Markup.inlineKeyboard([
+      Markup.button.callback("Pools", "pools"),
+      Markup.button.callback("Watchlist", "watchlist"),
+    ]);
+
+    await ctx.reply("Choose an option:", keyboard);
+  });
+
+  bot.action("pools", async (ctx) => {
+    logger.info("Asking for High Yield pools");
+
+    ctx.answerCbQuery("Checking for High Yield pools");
+    ctx.reply("Checking for High Yield pools");
+    const highYieldPools = await getHighYieldPools();
+    for (const poolMsg of highYieldPools) {
+      ctx.reply(poolMsg);
+      await delay(1000);
+    }
+    ctx.reply("===That's all High Yield pools===");
+  });
+
+  bot.action("watchlist", async (ctx) => {
+    logger.info("Asking for Watch List pools");
+
+    ctx.answerCbQuery("Checking for Watch List pools");
+    ctx.reply("Checking for Watch List pools");
+    const watchListPools = await getWatchListPools();
+    for (const poolMsg of watchListPools) {
+      ctx.reply(poolMsg);
+      await delay(1000);
+    }
+    ctx.reply("===That's all Watch List pools===");
   });
 
   // Enable graceful stop
@@ -175,6 +213,7 @@ async function checkPools() {
         `;
 
         bot.telegram.sendMessage(TELEGRAM_CHAT_ROOM_ID, message);
+        await delay(1000);
       }
     }
   }
@@ -184,7 +223,6 @@ async function checkPools() {
 
 async function runListener() {
   await init();
-  checkPools();
   setInterval(checkPools, POOL_CHECK_TIME_INTERVAL);
 }
 
