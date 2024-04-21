@@ -7,6 +7,7 @@
     "start": "yarn build && node ./dist/main.js",
     "dev": "yarn build && node ./dist/lp.js",
     "watch": "yarn build && node ./dist/monitor.js",
+    "swap": "yarn build && node ./dist/jupiter.js",
     "build": "yarn clean && tsc",
     "clean": "rimraf ./dist",
     "test": "yarn build && node ./dist/test.js"
@@ -14,11 +15,15 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@meteora-ag/dlmm": "1.0.20",
+    "@project-serum/anchor": "^0.26.0",
+    "@raydium-io/raydium-sdk": "^1.3.1-beta.51",
+    "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.91.4",
     "apisauce": "^3.0.1",
     "bigint-buffer": "^1.1.5",
     "bn.js": "^5.2.1",
     "bs58": "^5.0.0",
+    "cross-fetch": "^4.0.0",
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "dotenv": "^16.4.5",

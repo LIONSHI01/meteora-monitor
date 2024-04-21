@@ -36,9 +36,13 @@ const USDC_USDT_POOL = new PublicKey(
 );
 
 async function main() {
+  monitorPosition();
+}
+
+async function monitorPosition() {
   const dlmmPool = await DLMM.create(solanaConnection, USDC_USDT_POOL);
-  const LiquidityProvider = new MeteoraDlmm();
-  await LiquidityProvider.createBalancePosition(dlmmPool, 2 * 10 ** 6);
+  const LiquidityProvider = new MeteoraDlmm(dlmmPool);
+  // await LiquidityProvider.createBalancePosition(dlmmPool, 2 * 10 ** 6);
 }
 
 // async function main() {
