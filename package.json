@@ -6,8 +6,7 @@
   "scripts": {
     "start": "yarn build && node ./dist/main.js",
     "dev": "yarn build && node ./dist/lp.js",
-    "watch": "yarn build && node ./dist/monitor.js",
-    "swap": "yarn build && node ./dist/jupiter.js",
+    "market": "yarn build && node ./dist/market.js",
     "build": "yarn clean && tsc",
     "clean": "rimraf ./dist",
     "test": "yarn build && node ./dist/test.js"

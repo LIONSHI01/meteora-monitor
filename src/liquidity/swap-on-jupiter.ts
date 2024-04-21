@@ -18,7 +18,7 @@ type SwapOnJupiterParams = {
   amount: number;
 };
 
-async function swapOnJupiter({
+export async function swapOnJupiter({
   connection,
   wallet,
   inputMint,
