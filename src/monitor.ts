@@ -130,10 +130,6 @@ function runTgBot() {
       ctx.reply(pool);
       await delay(1000);
     }
-    // watchListPools.forEach(async (poolMsg) => {
-    //   ctx.reply(poolMsg);
-    //   await delay(1000);
-    // });
   });
 
   // Enable graceful stop

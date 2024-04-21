@@ -1,8 +1,10 @@
 import {
   METEORA_APP_DOMAIN,
+  MIN_LTV,
   WATCHLIST_MIN_24H_FEES,
   WATCHLIST_MIN_24H_VOLUME,
   WATCHLIST_MIN_APR,
+  WATCHLIST_MIN_LTV,
 } from "../constants/constants";
 import fs from "fs";
 import { resolve } from "path";
@@ -67,6 +69,9 @@ const filterByTxFee = (targetFee: number) => (pool: Pair) => {
 const filterByApr = (targetApr: number) => (pool: Pair) => {
   return Number(pool.apr) > targetApr && pool;
 };
+const filterByLtv = (targetLtv: number) => (pool: Pair) => {
+  return Number(pool.liquidity) > targetLtv && pool;
+};
 
 async function addMarketData(pool: Pair): Promise<PairWithMarketData> {
   const poolMarketStats = await getPoolMarketStats(pool.address);
@@ -128,6 +133,7 @@ export async function getHighYieldPools() {
     .filter(filterByVolume(MIN_24H_VOLUME))
     .filter(filterByTxFee(MIN_24H_FEES))
     .filter(filterByApr(MIN_APR))
+    .filter(filterByLtv(MIN_LTV))
     .sort(sortByApr);
 
   const matchedPoolsWithMarketData = await Promise.all(
@@ -156,6 +162,7 @@ export async function getWatchListPools() {
     .filter(filterByVolume(WATCHLIST_MIN_24H_VOLUME))
     .filter(filterByTxFee(WATCHLIST_MIN_24H_FEES))
     .filter(filterByApr(WATCHLIST_MIN_APR))
+    .filter(filterByLtv(WATCHLIST_MIN_LTV))
     .sort(sortByApr);
 
   const uniqueFilPools = _.uniqBy(filteredPools, "name");

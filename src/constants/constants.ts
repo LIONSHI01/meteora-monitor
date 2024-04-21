@@ -42,6 +42,7 @@ export const MIN_24H_VOLUME = Number(
   retrieveEnvVariable("MIN_24H_VOLUME", logger)
 );
 export const MIN_APR = Number(retrieveEnvVariable("MIN_APR", logger));
+export const MIN_LTV = Number(retrieveEnvVariable("MIN_LTV", logger));
 
 export const WATCHLIST_MIN_24H_FEES = Number(
   retrieveEnvVariable("WATCHLIST_MIN_24H_FEES", logger)
@@ -51,4 +52,7 @@ export const WATCHLIST_MIN_24H_VOLUME = Number(
 );
 export const WATCHLIST_MIN_APR = Number(
   retrieveEnvVariable("WATCHLIST_MIN_APR", logger)
+);
+export const WATCHLIST_MIN_LTV = Number(
+  retrieveEnvVariable("WATCHLIST_MIN_LTV", logger)
 );

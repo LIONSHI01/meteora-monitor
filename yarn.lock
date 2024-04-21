@@ -501,10 +501,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@meteora-ag/dlmm@^1.0.23":
-  version "1.0.23"
-  resolved "https://registry.yarnpkg.com/@meteora-ag/dlmm/-/dlmm-1.0.23.tgz#ff1e03f8b1f5686f3cf9d6da430ccc79646752fc"
-  integrity sha512-sIra1h7yxyge7QDPT0AVdAD+kp9QL+rRn7RRiR9iLGXijZS6FGFBRefUgCeiZdoSJbFpHo2/kK7KD6FM3vYSlg==
+"@meteora-ag/dlmm@1.0.20":
+  version "1.0.20"
+  resolved "https://registry.yarnpkg.com/@meteora-ag/dlmm/-/dlmm-1.0.20.tgz#4d32d9d36b3fa62f38db76830418f0e8e7f29579"
+  integrity sha512-BD9aOq1JfMJ/MHBEXffTX3op5Dczev7iZhG+5aLj2o6bRbOE12ldfrOiSnZXOfK3gjpnl4zi/eGuXsvNIFyBoA==
   dependencies:
     "@coral-xyz/anchor" "^0.28.0"
     "@solana/buffer-layout" "^4.0.1"
