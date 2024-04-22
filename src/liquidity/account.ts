@@ -8,6 +8,7 @@ import { swapOnJupiter } from "./swap-on-jupiter";
 import { Wallet } from "@project-serum/anchor";
 import { logger } from "../utils";
 import { TokenBalance } from "../utils/types/account";
+import { SWAP_AMOUNT_RATIO } from "../constants";
 
 export async function getTokenAccounts(
   connection: Connection,
@@ -68,7 +69,7 @@ export const getWalletTokenBalances = async (
 
     tokenBalances.push({
       ...tokenBalance,
-      mintPubKey: tokenAc.pubkey.toString(),
+      mintPubKey: tokenAc.accountInfo.mint.toString(),
     });
   }
 
@@ -118,24 +119,44 @@ export const monitorPositions = async (
       const outputMint = inputMint === mint_x ? mint_y : mint_x;
 
       // Get Account Token Amount
+      const accountBalances = await getWalletTokenBalances(
+        connection,
+        userWallet.publicKey
+      );
 
-      await swapOnJupiter({
+      const inputMintAccountBalance = accountBalances.find(
+        (tokenAc) => tokenAc.mintPubKey === inputMint
+      );
+
+      // If Token not exist / balance = 0
+      if (
+        !inputMintAccountBalance ||
+        Number(inputMintAccountBalance.value.amount) === 0
+      ) {
+        logger.warn(`Input Mint Token:${inputMint} not found in wallet`);
+        throw new Error(`Input Mint Token:${inputMint} not found in wallet`);
+      }
+
+      const inputMintAmount =
+        (Number(inputMintAccountBalance.value.amount) * SWAP_AMOUNT_RATIO) /
+        100;
+
+      logger.info(`Swapping ${inputMintAmount} ${inputMint} to ${outputMint}`);
+      const isSwapSuccess = await swapOnJupiter({
         inputMint,
         outputMint,
-        amount: 100000,
+        amount: inputMintAmount,
         connection,
         wallet: userWallet,
       });
+
+      if (isSwapSuccess) {
+        // Add Liquidity Again
+        logger.info(`Adding New Liquidity...`);
+        await Liquidity.createBalancePosition(inputMintAmount);
+      }
     } else {
       logger.info("Failed to remove position, pipeline stopped");
     }
-
-    // Add Liquidity Again
-
-    // console.log({
-    //   lowerBinId,
-    //   upperBinId,
-    //   activeBin,
-    // });
   }
 };

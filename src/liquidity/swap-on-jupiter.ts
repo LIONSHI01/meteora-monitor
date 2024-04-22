@@ -32,11 +32,14 @@ export async function swapOnJupiter({
     amount,
   });
 
+  console.log("🚀 ~ quoteResponse:", quoteResponse);
   logger.info("Get Serialized Tx from Jupiter");
   const { swapTransaction } = await getSerializedTx({
     quote: quoteResponse,
     wallet,
   });
+
+  console.log("🚀 ~ swapTransaction:", swapTransaction);
 
   const swapTransactionBuf = Buffer.from(swapTransaction, "base64");
   const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
@@ -55,7 +58,11 @@ export async function swapOnJupiter({
     });
     await connection.confirmTransaction(txid);
     logger.info(`Transaction finish: https://solscan.io/tx/${txid}`);
+
+    // Return Tx Result
+    return true;
   } catch (error) {
     console.log(error);
+    return false;
   }
 }

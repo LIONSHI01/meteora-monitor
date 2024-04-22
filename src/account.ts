@@ -19,6 +19,7 @@ type TokenBalance = RpcResponseAndContext<TokenAmount> & {
 };
 
 let tokenBalances: TokenBalance[] = [];
+
 async function account() {
   const tokenAccounts = await getTokenAccounts(
     solanaConnection,
@@ -34,11 +35,9 @@ async function account() {
 
     tokenBalances.push({
       ...tokenBalance,
-      mintPubKey: tokenAc.pubkey.toString(),
+      mintPubKey: tokenAc.accountInfo.mint.toString(),
     });
   }
-
-  console.log(tokenBalances);
 }
 
 account();
