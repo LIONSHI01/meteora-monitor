@@ -24,6 +24,6 @@ export const getPoolMarket = async (poolAddress: string) => {
       throw new Error("Failed to fetch Pool Data from Geckoterminal API.");
     }
   } catch (error) {
-    console.log("🚀 ~ getAllPairs ~ error:", error);
+    console.log("🚀 ~ getPoolMarket from GeckoTerminal ~ error:", error);
   }
 };

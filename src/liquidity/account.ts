@@ -1,14 +1,15 @@
 import DLMM from "@meteora-ag/dlmm";
 import { SPL_ACCOUNT_LAYOUT, TokenAccount } from "@raydium-io/raydium-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Commitment, Connection, PublicKey } from "@solana/web3.js";
+import { Commitment, Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { getPoolInfo } from "../api";
 import { MeteoraDlmm } from "./meteora-provider";
 import { swapOnJupiter } from "./swap-on-jupiter";
-import { Wallet } from "@project-serum/anchor";
-import { logger } from "../utils";
+import { delay, logger } from "../utils";
 import { TokenBalance } from "../utils/types/account";
 import { SWAP_AMOUNT_RATIO } from "../constants";
+import { Wallet } from "@project-serum/anchor";
+import { convertPositionMapToArray } from "../utils/helper";
 
 export async function getTokenAccounts(
   connection: Connection,
@@ -89,7 +90,7 @@ export const monitorPositions = async (
   const Pool = new PublicKey(poolAddress);
 
   const dlmmPool = await DLMM.create(connection, Pool);
-  const Liquidity = new MeteoraDlmm(dlmmPool);
+  const Liquidity = new MeteoraDlmm(userWallet);
   const { userPositions, activeBin } =
     await dlmmPool.getPositionsByUserAndLbPair(userWallet.publicKey);
 
@@ -110,7 +111,10 @@ export const monitorPositions = async (
     };
 
     // Exit Liquidity
-    const isTxSuccess = await Liquidity.removeSinglePositionLiquidity(position);
+    const isTxSuccess = await Liquidity.removeSinglePositionLiquidity(
+      dlmmPool,
+      position
+    );
 
     if (isTxSuccess) {
       // Swap Exceed Token
@@ -153,10 +157,41 @@ export const monitorPositions = async (
       if (isSwapSuccess) {
         // Add Liquidity Again
         logger.info(`Adding New Liquidity...`);
-        await Liquidity.createBalancePosition(inputMintAmount);
+        await Liquidity.createBalancePosition(dlmmPool, inputMintAmount);
       }
     } else {
       logger.info("Failed to remove position, pipeline stopped");
     }
+  }
+};
+
+export const checkWalletPositions = async (
+  connection: Connection,
+  userPubKey: PublicKey
+) => {
+  try {
+    const positions = await DLMM.getAllLbPairPositionsByUser(
+      connection,
+      userPubKey
+    );
+    const positionsArray = convertPositionMapToArray(positions);
+    await delay(1000);
+    return positionsArray;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const checkWalletPositionInRange = async (
+  connection: Connection,
+  wallets: string[]
+) => {
+  for (const wallet of wallets) {
+    const walletIns = new PublicKey(wallet);
+    const positions = await DLMM.getAllLbPairPositionsByUser(
+      connection,
+      walletIns
+    );
+    console.log("🚀 ~ positions:", positions);
   }
 };

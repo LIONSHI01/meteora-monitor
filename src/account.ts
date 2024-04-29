@@ -7,7 +7,11 @@ import {
   TokenAmount,
 } from "@solana/web3.js";
 import { COMMITMENT_LEVEL, PRIVATE_KEY, RPC_ENDPOINT } from "./constants";
-import { getTokenAccounts, getTokenBalance } from "./liquidity";
+import {
+  checkWalletPositionInRange,
+  getTokenAccounts,
+  getTokenBalance,
+} from "./liquidity";
 import { Wallet } from "@coral-xyz/anchor";
 import bs58 from "bs58";
 
@@ -39,5 +43,3 @@ async function account() {
     });
   }
 }
-
-account();

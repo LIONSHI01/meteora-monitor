@@ -1,11 +1,11 @@
 import fs from "fs";
 import { resolve } from "path";
 import _ from "lodash";
-import { Markup, Telegraf } from "telegraf";
+import { Markup } from "telegraf";
 import { Connection, PublicKey } from "@solana/web3.js";
 import DLMM from "@meteora-ag/dlmm";
 
-import { bot } from "./telegram";
+import { bot, tgMessageReporter } from "./telegram";
 import { delay, logger } from "./utils";
 import {
   RPC_ENDPOINT,
@@ -14,11 +14,20 @@ import {
   TELEGRAM_CHAT_ROOM_ID,
   COMMITMENT_LEVEL,
   METEORA_APP_DOMAIN,
+  POOL_CHECK_TIME_INTERVAL,
 } from "./constants";
-import { getHighYieldPools, getWatchListPools } from "./market/pools";
+import {
+  generatePoolMessage,
+  getHighYieldPools,
+  getPoolAnalysis,
+  getWatchListPools,
+  huntHighYieldPools,
+} from "./market/pools";
+import { PairWithMarketData } from "./utils/types/gecko";
 
 let poolList: string[] = [];
 let tokenList: string[] = [];
+let HIGH_YIELD_POOLS: PairWithMarketData[] = [];
 
 // NOTE: launch Telegram bot
 bot.launch();
@@ -71,7 +80,7 @@ function addNewPoolAddress(poolAddress: string) {
 }
 
 function runTgBot() {
-  bot.use(Telegraf.log());
+  // bot.use(Telegraf.log());
   logger.info("------------------- 🚀 ---------------------");
   logger.info("Telegram bot started.");
   logger.info("------------------- 🚀 ---------------------");
@@ -99,6 +108,15 @@ function runTgBot() {
     ctx.reply(`added new pool address: ${newPoolAddress}`);
 
     loadPoolList();
+  });
+
+  bot.command("pool", async (ctx) => {
+    const poolToCheck = ctx.message.text.split(" ")[1];
+
+    if (!poolToCheck) return;
+
+    const poolAnalysisReport = await getPoolAnalysis(poolToCheck);
+    ctx.reply(poolAnalysisReport);
   });
 
   bot.command("info", (ctx) => {
@@ -138,6 +156,7 @@ function runTgBot() {
     const keyboard = Markup.inlineKeyboard([
       Markup.button.callback("Pools", "pools"),
       Markup.button.callback("Watchlist", "watchlist"),
+      Markup.button.callback("High Yields", "highyield"),
     ]);
 
     await ctx.reply("Choose an option:", keyboard);
@@ -167,6 +186,15 @@ function runTgBot() {
       await delay(1000);
     }
     ctx.reply("===That's all Watch List pools===");
+  });
+
+  bot.action("highyield", async (ctx) => {
+    logger.info("Asking for High Yield pools");
+
+    ctx.answerCbQuery("Checking for High Yield pools");
+    ctx.reply("Checking for High Yield pools");
+
+    await highYieldCheck();
   });
 
   // Enable graceful stop
@@ -220,8 +248,45 @@ async function checkPools() {
   logger.info("Bot sleeping...");
 }
 
+async function highYieldCheck() {
+  const highYieldPools = await huntHighYieldPools();
+  // Check if already spotted
+  const newPools = highYieldPools.filter((existingPool) => {
+    return !HIGH_YIELD_POOLS.find(
+      (pool) => pool.address === existingPool.address
+    );
+  });
+
+  HIGH_YIELD_POOLS.push(...newPools);
+
+  const poolMessages = newPools.map(generatePoolMessage);
+
+  if (newPools.length > 0) {
+    logger.info(`Spotted HIGH YIELD POOLS: ${newPools.length}`);
+    bot.telegram.sendMessage(
+      TELEGRAM_CHAT_ROOM_ID,
+      `Spotted HIGH YIELD POOLS: ${newPools.length}`
+    );
+
+    await tgMessageReporter({
+      chatId: TELEGRAM_CHAT_ROOM_ID,
+      poolMessages,
+      endMsg: "===That's all HIGH YIELD POOLS===",
+    });
+  }
+}
+
+let intervalId: NodeJS.Timeout;
 async function runMarketListener() {
   await init();
+  intervalId = setInterval(highYieldCheck, POOL_CHECK_TIME_INTERVAL);
+}
+
+function terminateMarketListener() {
+  clearInterval(intervalId); // Clear the interval
+  console.log("Market listener terminated.");
 }
 
 runMarketListener();
+
+terminateMarketListener();

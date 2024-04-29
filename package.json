@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "yarn build && node ./dist/main.js",
+    "daily": "yarn build && node ./dist/routine.js",
     "dev": "yarn build && node ./dist/lp.js",
     "ac": "yarn build && node ./dist/account.js",
     "market": "yarn build && node ./dist/market.js",
@@ -45,6 +46,13 @@
     "eslint": "^8.54.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-babel-module": "^5.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "eslint-plugin-unused-imports": "2.0.0"
   }
 }

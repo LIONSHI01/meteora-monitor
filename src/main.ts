@@ -1,14 +1,16 @@
+import fs from "fs";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { METEORA_APP_DOMAIN, RPC_ENDPOINT } from "./constants";
+import { checkWalletPositions } from "./liquidity";
+import { resolve } from "path";
+import { logger } from "ethers";
+import { getPoolInfo } from "./api";
 import DLMM from "@meteora-ag/dlmm";
-import bs58 from "bs58";
-import { Keypair, Connection, PublicKey } from "@solana/web3.js";
+import { delay } from "./utils";
+import _ from "lodash";
+import { loadLocalWalletList } from "./utils/helper";
 
-import {
-  RPC_ENDPOINT,
-  RPC_WEBSOCKET_ENDPOINT,
-  PRIVATE_KEY,
-  WALLET_ADDRESS,
-} from "./constants";
-import { BN } from "@coral-xyz/anchor";
+const solanaConnection = new Connection(RPC_ENDPOINT, "finalized");
 
 const main = async () => {};
 

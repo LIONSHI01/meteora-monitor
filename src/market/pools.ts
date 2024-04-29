@@ -1,15 +1,19 @@
 import {
+  HIGH_YIELD_POOL_MIN_24H_FEES,
+  HIGH_YIELD_POOL_MIN_24H_VOLUME,
+  HIGH_YIELD_POOL_MIN_APR,
+  HIGH_YIELD_POOL_MIN_LTV,
   METEORA_APP_DOMAIN,
   MIN_LTV,
   WATCHLIST_MIN_24H_FEES,
   WATCHLIST_MIN_24H_VOLUME,
   WATCHLIST_MIN_APR,
   WATCHLIST_MIN_LTV,
-} from "../constants/constants";
+} from "../constants";
 import fs from "fs";
 import { resolve } from "path";
 
-import { getAllPairs } from "../api";
+import { getAllPairs, getPoolInfo } from "../api";
 import { logger, parseNumber } from "../utils";
 
 import { MIN_24H_FEES, MIN_APR, MIN_24H_VOLUME } from "../constants";
@@ -81,7 +85,7 @@ async function addMarketData(pool: Pair): Promise<PairWithMarketData> {
 
 const sortByApr = (a: Pair, b: Pair) => b.apr - a.apr;
 
-function generatePoolMessage(pool: PairWithMarketData) {
+export function generatePoolMessage(pool: PairWithMarketData) {
   const {
     address,
     apr,
@@ -123,6 +127,29 @@ function generatePoolMessage(pool: PairWithMarketData) {
 
 async function init() {
   loadTokenList();
+}
+
+type PoolsFilterParams = {
+  pools: Pair[];
+  volume: number;
+  fee: number;
+  apr: number;
+  ltv: number;
+};
+
+function poolsFilterFactory({
+  apr,
+  fee,
+  ltv,
+  volume,
+  pools,
+}: PoolsFilterParams) {
+  return pools
+    .filter(filterByVolume(volume))
+    .filter(filterByTxFee(fee))
+    .filter(filterByApr(apr))
+    .filter(filterByLtv(ltv))
+    .sort(sortByApr);
 }
 
 export async function getHighYieldPools() {
@@ -174,4 +201,32 @@ export async function getWatchListPools() {
   const finalOutput = matchedPoolsWithMarketData.map(generatePoolMessage);
 
   return finalOutput;
+}
+
+export async function getPoolAnalysis(poolAddress: string) {
+  const poolDetails = await getPoolInfo(poolAddress);
+  const poolWithMarketStats = await addMarketData(poolDetails);
+  return generatePoolMessage(poolWithMarketStats);
+}
+
+export async function huntHighYieldPools() {
+  const allPools = await getAllPairs();
+
+  const filteredPools = poolsFilterFactory({
+    pools: allPools,
+    apr: HIGH_YIELD_POOL_MIN_APR,
+    fee: HIGH_YIELD_POOL_MIN_24H_FEES,
+    ltv: HIGH_YIELD_POOL_MIN_LTV,
+    volume: HIGH_YIELD_POOL_MIN_24H_VOLUME,
+  });
+
+  const uniqueFilPools = _.uniqBy(filteredPools, "name");
+
+  const matchedPoolsWithMarketData = await Promise.all(
+    uniqueFilPools.map(addMarketData)
+  );
+
+  // const finalOutput = matchedPoolsWithMarketData.map(generatePoolMessage);
+
+  return matchedPoolsWithMarketData;
 }

@@ -25,26 +25,32 @@ import {
 import { logger } from "./utils";
 
 import { Wallet } from "@project-serum/anchor";
-import { monitorPositions } from "./liquidity";
+import { MeteoraDlmm, monitorPositions } from "./liquidity";
 
 // Wallet to be monitor
 const wallet = new Wallet(Keypair.fromSecretKey(bs58.decode(PRIVATE_KEY)));
 
 const solanaConnection = new Connection(RPC_ENDPOINT, "finalized");
 
-const USDC_USDT_POOL = new PublicKey(
-  "BmdTFuWX5QqsFdYe8554TV45TJbGGmcThDK6ArLFHemt"
-);
 const SOL_USDC_POOL = new PublicKey(
-  "4YVLUZGEhsjfsWuxRbo6h18vL297HYRHTrLVE8bwpyCW"
+  "CR2kQQcALb9FpA5y5KA7oa3Kf1kZ63Tz6uSQyG2yzPc6"
 );
 
+const Liquidity = new MeteoraDlmm(wallet);
 async function main() {
-  await monitorPositions(
-    solanaConnection,
-    "4YVLUZGEhsjfsWuxRbo6h18vL297HYRHTrLVE8bwpyCW",
-    wallet
-  );
+  // const dlmmPool = await DLMM.create(solanaConnection, SOL_USDC_POOL);
+  const positionsMap = await Liquidity.getAllLbPairPositions();
+  let array = Array.from(positionsMap, ([name, value]) => ({
+    positionAddress: name,
+    position: value,
+  }));
+
+  // await Liquidity.createBalancePosition(dlmmPool, 1000000);
+  // await monitorPositions(
+  //   solanaConnection,
+  //   "BmdTFuWX5QqsFdYe8554TV45TJbGGmcThDK6ArLFHemt",
+  //   wallet
+  // );
 }
 
 main();

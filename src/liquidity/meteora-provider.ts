@@ -12,9 +12,9 @@ import BN from "bn.js";
 import DLMM, { BinLiquidity, LbPosition, StrategyType } from "@meteora-ag/dlmm";
 import { logger } from "../utils";
 import { PRIVATE_KEY, RPC_ENDPOINT } from "../constants";
-import { Wallet } from "ethers";
+import { Wallet } from "@project-serum/anchor";
 
-const user = Keypair.fromSecretKey(bs58.decode(PRIVATE_KEY));
+// const user = Keypair.fromSecretKey(bs58.decode(PRIVATE_KEY));
 
 const connection = new Connection(RPC_ENDPOINT, "finalized");
 
@@ -44,29 +44,28 @@ export interface ParsedClockState {
 // const newOneSidePosition = new Keypair();
 
 export class MeteoraDlmm {
-  dlmmPool: DLMM;
-
-  constructor(dlmmPool: DLMM) {
-    this.dlmmPool = dlmmPool;
+  user: Wallet;
+  constructor(user: Wallet) {
+    this.user = user;
   }
 
-  async getActiveBin() {
+  async getActiveBin(dlmmPool: DLMM) {
     // Get pool state
     logger.info("Get active bin");
-    const activeBin = await this.dlmmPool.getActiveBin();
+    const activeBin = await dlmmPool.getActiveBin();
     return activeBin;
   }
 
-  async createBalancePosition(tokenXAmount: number) {
+  async createBalancePosition(dlmmPool: DLMM, tokenXAmount: number) {
     const newBalancePosition = new Keypair();
-    const activeBin = await this.getActiveBin();
+    const activeBin = await this.getActiveBin(dlmmPool);
 
     logger.info("Create LP Position");
     const TOTAL_RANGE_INTERVAL = 10; // 10 bins on each side of the active bin
     const minBinId = activeBin.binId - TOTAL_RANGE_INTERVAL;
     const maxBinId = activeBin.binId + TOTAL_RANGE_INTERVAL;
 
-    const activeBinPricePerToken = this.dlmmPool.fromPricePerLamport(
+    const activeBinPricePerToken = dlmmPool.fromPricePerLamport(
       Number(activeBin.price)
     );
     const totalXAmount = new BN(tokenXAmount);
@@ -77,9 +76,9 @@ export class MeteoraDlmm {
     logger.info("Create Position Tx");
     // Create Position
     const createPositionTx =
-      await this.dlmmPool.initializePositionAndAddLiquidityByStrategy({
+      await dlmmPool.initializePositionAndAddLiquidityByStrategy({
         positionPubKey: newBalancePosition.publicKey,
-        user: user.publicKey,
+        user: this.user.publicKey,
         totalXAmount,
         totalYAmount,
         strategy: {
@@ -94,7 +93,7 @@ export class MeteoraDlmm {
       const createBalancePositionTxHash = await sendAndConfirmTransaction(
         connection,
         createPositionTx,
-        [user, newBalancePosition]
+        [this.user.payer, newBalancePosition]
       );
       console.log(
         "🚀 ~ createBalancePositionTxHash:",
@@ -106,11 +105,11 @@ export class MeteoraDlmm {
     }
   }
 
-  async getPositionsState() {
+  async getPositionsState(dlmmPool: DLMM, userPubKey: PublicKey) {
     // Get position state
     try {
-      const positionsState = await this.dlmmPool.getPositionsByUserAndLbPair(
-        user.publicKey
+      const positionsState = await dlmmPool.getPositionsByUserAndLbPair(
+        userPubKey
       );
 
       return positionsState.userPositions;
@@ -118,9 +117,25 @@ export class MeteoraDlmm {
       console.log(error);
     }
   }
+  async getAllLbPairPositions() {
+    // Get position state
+    try {
+      const positionsState = await DLMM.getAllLbPairPositionsByUser(
+        connection,
+        this.user.publicKey
+      );
 
-  async removePoolPositions() {
-    const userPositions = await this.getPositionsState();
+      return positionsState;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async removePoolPositions(dlmmPool: DLMM) {
+    const userPositions = await this.getPositionsState(
+      dlmmPool,
+      this.user.publicKey
+    );
 
     // Remove Liquidity
     const removeLiquidityTxs = (
@@ -129,9 +144,9 @@ export class MeteoraDlmm {
           const binIdsToRemove = positionData.positionBinData.map(
             (bin) => bin.binId
           );
-          return this.dlmmPool.removeLiquidity({
+          return dlmmPool.removeLiquidity({
             position: publicKey,
-            user: user.publicKey,
+            user: this.user.publicKey,
             binIds: binIdsToRemove,
             liquiditiesBpsToRemove: new Array(binIdsToRemove.length).fill(
               new BN(100 * 100)
@@ -147,7 +162,7 @@ export class MeteoraDlmm {
         const removeBalanceLiquidityTxHash = await sendAndConfirmTransaction(
           connection,
           tx,
-          [user],
+          [this.user.payer],
           { skipPreflight: false, preflightCommitment: "confirmed" }
         );
         console.log(
@@ -160,16 +175,16 @@ export class MeteoraDlmm {
     }
   }
 
-  async removeSinglePositionLiquidity(position: LbPosition) {
+  async removeSinglePositionLiquidity(dlmmPool: DLMM, position: LbPosition) {
     logger.info(`Start to remove Position: ${position.publicKey.toString()}`);
 
     const { publicKey, positionData } = position || {};
     const binIdsToRemove = positionData.positionBinData.map((bin) => bin.binId);
 
     logger.info(`Create Remove Liquidity Tx`);
-    const removeLiquidityTxs = (await this.dlmmPool.removeLiquidity({
+    const removeLiquidityTxs = (await dlmmPool.removeLiquidity({
       position: publicKey,
-      user: user.publicKey,
+      user: this.user.publicKey,
       binIds: binIdsToRemove,
       liquiditiesBpsToRemove: new Array(binIdsToRemove.length).fill(
         new BN(100 * 100)
@@ -182,7 +197,7 @@ export class MeteoraDlmm {
       const removeBalanceLiquidityTxHash = await sendAndConfirmTransaction(
         connection,
         removeLiquidityTxs,
-        [user],
+        [this.user.payer],
         { skipPreflight: false, preflightCommitment: "confirmed" }
       );
       logger.info(`Tx confirmed: ${removeBalanceLiquidityTxHash}`);
@@ -195,16 +210,16 @@ export class MeteoraDlmm {
     }
   }
 
-  async swap(ySwapAmount: number) {
+  async swap(dlmmPool: DLMM, ySwapAmount: number) {
     const swapAmount = new BN(ySwapAmount);
     // Swap quote
     const swapYtoX = true;
-    const binArrays = await this.dlmmPool.getBinArrayForSwap(swapYtoX);
+    const binArrays = await dlmmPool.getBinArrayForSwap(swapYtoX);
 
     // check whether it is permission or permissionless pool
     let maxSwappedAmount: BN;
     let throttledStats: boolean;
-    if (!swapYtoX && this.dlmmPool.lbPair.pairType == 1) {
+    if (!swapYtoX && dlmmPool.lbPair.pairType == 1) {
       // get current slot
       const parsedClock = await connection.getParsedAccountInfo(
         SYSVAR_CLOCK_PUBKEY
@@ -213,43 +228,36 @@ export class MeteoraDlmm {
         .parsed as ParsedClockState;
       if (
         parsedClockAccount.info.slot <=
-        this.dlmmPool.lbPair.swapCapDeactivateSlot.toNumber()
+        dlmmPool.lbPair.swapCapDeactivateSlot.toNumber()
       ) {
         throttledStats = true;
-        maxSwappedAmount = this.dlmmPool.lbPair.maxSwappedAmount;
+        maxSwappedAmount = dlmmPool.lbPair.maxSwappedAmount;
       }
     }
     const swapQuote = throttledStats
-      ? await this.dlmmPool.swapQuoteWithCap(
+      ? await dlmmPool.swapQuoteWithCap(
           swapAmount,
           swapYtoX,
           new BN(10),
           maxSwappedAmount,
           binArrays
         )
-      : await this.dlmmPool.swapQuote(
-          swapAmount,
-          swapYtoX,
-          new BN(10),
-          binArrays
-        );
-
-    console.log("🚀 ~ swapQuote:", swapQuote);
+      : await dlmmPool.swapQuote(swapAmount, swapYtoX, new BN(10), binArrays);
 
     // Swap
-    const swapTx = await this.dlmmPool.swap({
-      inToken: this.dlmmPool.tokenX.publicKey,
+    const swapTx = await dlmmPool.swap({
+      inToken: dlmmPool.tokenX.publicKey,
       binArraysPubkey: swapQuote.binArraysPubkey,
       inAmount: swapAmount,
-      lbPair: this.dlmmPool.pubkey,
-      user: user.publicKey,
+      lbPair: dlmmPool.pubkey,
+      user: this.user.publicKey,
       minOutAmount: swapQuote.minOutAmount,
-      outToken: this.dlmmPool.tokenY.publicKey,
+      outToken: dlmmPool.tokenY.publicKey,
     });
 
     try {
       const swapTxHash = await sendAndConfirmTransaction(connection, swapTx, [
-        user,
+        this.user.payer,
       ]);
       console.log("🚀 ~ swapTxHash:", swapTxHash);
     } catch (error) {

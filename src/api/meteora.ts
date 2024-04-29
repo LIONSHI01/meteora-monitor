@@ -17,7 +17,8 @@ export const getAllPairs = async () => {
     if (res?.data) {
       return res.data;
     } else {
-      throw new Error("Failed to fetch All Pairs from Meteora API.");
+      return;
+      // throw new Error("Failed to fetch All Pairs from Meteora API.");
     }
   } catch (error) {
     console.log("🚀 ~ getAllPairs ~ error:", error);

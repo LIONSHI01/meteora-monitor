@@ -19,5 +19,23 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "latest",
   },
-  rules: {},
+  rules: {
+    "unused-imports/no-unused-imports": "error",
+    "simple-import-sort/exports": "warn",
+    "simple-import-sort/imports": [
+      "warn",
+      {
+        groups: [
+          ["^react$"],
+          ["^\\u0000"],
+          ["^@?\\w"],
+          ["^components(/.*|$)"],
+          ["^containers(/.*|$)"],
+          ["^(types|utils|api|config|styles|pages)(/.*|$)"],
+          ["^\\."],
+        ],
+      },
+    ],
+    "no-unused-vars": "off",
+  },
 };
