@@ -17,19 +17,23 @@ export const checkWalletPositionsInRange = async (
 ) => {
   const walletList = loadLocalWalletList();
 
+  logger.info("=== 🧘‍♂️ New round checking Started. 🧘‍♂️ ===");
+
   if (walletList.length === 0) {
     logger.info("No wallets found. Skip Positions Checking.");
     return;
   }
 
   for (const wallet of walletList) {
-    logger.info(`Wallet: ${wallet.name}`);
+    logger.info(`=== Wallet: ${wallet.name} ===`);
     const walletPubKey = new PublicKey(wallet.address);
     const positions = await checkWalletPositions(connection, walletPubKey);
+    logger.info(`Wallet ${wallet.name}: ${positions.length} Position(s)`);
 
-    for (const pos of positions) {
-      logger.info("Checking Positions");
-      const { position } = pos || {};
+    for (let i = 0; i < positions.length; i++) {
+      logger.info(`Checking Position ${i + 1}`);
+      // for (const pos of positions) {
+      const { position } = positions[i] || {};
       const { publicKey: poolPubKey } = position || {};
       const poolInfo = await getPoolInfo(poolPubKey.toString());
 
@@ -46,11 +50,11 @@ export const checkWalletPositionsInRange = async (
         );
 
         if (isPositionWithinRange) {
-          logger.info("Pool is within range.");
+          logger.info(`Result: Position is within range. \n`);
         }
 
         if (!isPositionWithinRange) {
-          logger.info("Detected Pool out of range.");
+          logger.info("Detected Position out of range. \n");
 
           const poolUrl = `${METEORA_APP_DOMAIN}/${poolInfo.address}`;
           const message = `
@@ -66,4 +70,6 @@ export const checkWalletPositionsInRange = async (
       }
     }
   }
+
+  logger.info("=== 🍻 This round's checking finish. 🍻 ===");
 };

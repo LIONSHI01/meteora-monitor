@@ -104,15 +104,17 @@ export function generatePoolMessage(pool: PairWithMarketData) {
     volH1,
     volH24,
     volH6,
+    bin_step,
   } = pool || {};
 
   const poolUrl = `${METEORA_APP_DOMAIN}/${address}`;
   const outputMsg = `
+  TVL: ${parseNumber(liquidity)} 
+  Bin Step: ${bin_step}
   Pair: ${name} 
   Apr: ${parseNumber(apr)}% 
   24h fees: ${parseNumber(fees_24h)} 
   Today fees: ${parseNumber(today_fees)} 
-  TVL: ${parseNumber(liquidity)} 
   Fee per TVL(Today): ${parseNumber(fees_24h / Number(liquidity))} 
   Fee per TVL(24h): ${parseNumber(today_fees / Number(liquidity))} 
   Price: 5M ${priceM5}|1H ${priceH1}|6H ${priceH6}|24H ${priceH24}
