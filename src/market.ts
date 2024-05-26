@@ -25,6 +25,7 @@ import {
 } from "./market/pools";
 import { PairWithMarketData } from "./utils/types/gecko";
 
+const MSG_DELAY = 2000;
 let poolList: string[] = [];
 let tokenList: string[] = [];
 let HIGH_YIELD_POOLS: PairWithMarketData[] = [];
@@ -137,7 +138,7 @@ function runTgBot() {
     const highYieldPools = await getHighYieldPools();
     for (const poolMsg of highYieldPools) {
       ctx.reply(poolMsg);
-      await delay(1000);
+      await delay(MSG_DELAY);
     }
   });
 
@@ -146,7 +147,7 @@ function runTgBot() {
     const watchListPools = await getWatchListPools();
     for (const poolMsg of watchListPools) {
       ctx.reply(poolMsg);
-      await delay(1000);
+      await delay(MSG_DELAY);
     }
   });
 
@@ -170,7 +171,7 @@ function runTgBot() {
     const highYieldPools = await getHighYieldPools();
     for (const poolMsg of highYieldPools) {
       ctx.reply(poolMsg);
-      await delay(1000);
+      await delay(MSG_DELAY);
     }
     ctx.reply("===That's all High Yield pools===");
   });
@@ -183,7 +184,7 @@ function runTgBot() {
     const watchListPools = await getWatchListPools();
     for (const poolMsg of watchListPools) {
       ctx.reply(poolMsg);
-      await delay(1000);
+      await delay(MSG_DELAY);
     }
     ctx.reply("===That's all Watch List pools===");
   });
@@ -240,7 +241,7 @@ async function checkPools() {
         `;
 
         bot.telegram.sendMessage(TELEGRAM_CHAT_ROOM_ID, message);
-        await delay(1000);
+        await delay(MSG_DELAY);
       }
     }
   }
